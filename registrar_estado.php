@@ -4,7 +4,7 @@ header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
 
-// CRÍTICO: Manejar preflight OPTIONS
+// Manejar preflight OPTIONS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -12,21 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 include 'conexion.php';
 
-// Obtener datos del body
 $rawData = file_get_contents('php://input');
 $data = json_decode($rawData, true);
 
-// Log temporal para debugging (eliminar en producción)
-error_log("Raw data: " . $rawData);
-error_log("Decoded data: " . print_r($data, true));
-
-// Validar que se recibieron datos
 if (!$data) {
-    echo json_encode([
-        'success' => false, 
-        'error' => 'No se recibieron datos',
-        'raw' => $rawData
-    ]);
+    http_response_code(200); // ← IMPORTANTE: Siempre 200
+    echo json_encode(['success' => false, 'error' => 'No se recibieron datos']);
     exit;
 }
 
@@ -37,33 +28,20 @@ $comentario = $data['comentario'] ?? null;
 $frase = $data['frase'] ?? '';
 $recomendacion = $data['recomendacion'] ?? '';
 
-// Validar usuario_id
 if ($usuario_id <= 0) {
-    echo json_encode([
-        'success' => false, 
-        'error' => 'Usuario inválido',
-        'usuario_id_recibido' => $usuario_id
-    ]);
-    exit;
-}
-
-// Validar que haya al menos redacción o emoción
-if (empty($redaccion) && empty($emocion)) {
-    echo json_encode([
-        'success' => false,
-        'error' => 'Se requiere redacción o emoción'
-    ]);
+    http_response_code(200); // ← IMPORTANTE
+    echo json_encode(['success' => false, 'error' => 'Usuario inválido']);
     exit;
 }
 
 try {
-    // Preparar query
     $stmt = $conn->prepare(
-        "INSERT INTO emociones (usuario_id, redaccion, emocion, comentario, frase, recomendacion, fecha) 
-         VALUES (?, ?, ?, ?, ?, ?, NOW())"
+        "INSERT INTO emociones (usuario_id, redaccion, emocion, comentario, frase, recomendacion) 
+         VALUES (?, ?, ?, ?, ?, ?)"
     );
     
     if (!$stmt) {
+        http_response_code(200); // ← IMPORTANTE
         echo json_encode([
             'success' => false,
             'error' => 'Error preparando query',
@@ -75,15 +53,17 @@ try {
     $stmt->bind_param("isssss", $usuario_id, $redaccion, $emocion, $comentario, $frase, $recomendacion);
     
     if ($stmt->execute()) {
+        http_response_code(200); // ← IMPORTANTE
         echo json_encode([
             'success' => true,
             'id' => $conn->insert_id,
             'message' => 'Estado guardado correctamente'
         ]);
     } else {
+        http_response_code(200); // ← IMPORTANTE
         echo json_encode([
             'success' => false, 
-            'error' => 'Error al ejecutar query',
+            'error' => 'Error al insertar',
             'detalle' => $stmt->error
         ]);
     }
@@ -91,10 +71,11 @@ try {
     $stmt->close();
     
 } catch (Exception $e) {
+    http_response_code(200); // ← IMPORTANTE
     echo json_encode([
         'success' => false,
-        'error' => 'Excepción capturada',
-        'detalle' => $e->getMessage()
+        'error' => 'Excepción',
+        'mensaje' => $e->getMessage()
     ]);
 }
 
