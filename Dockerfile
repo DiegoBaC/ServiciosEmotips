@@ -1,14 +1,17 @@
-# Imagen base con Apache + PHP 8.2
+# Dockerfile
 FROM php:8.2-apache
 
-# Instala extensiones necesarias para MySQL
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# Instalar dependencias necesarias
+RUN apt-get update && apt-get install -y unzip git
 
-# Copia tu proyecto al contenedor
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copiar archivos del proyecto
 COPY . /var/www/html/
 
-# Da permisos a Apache
-RUN chown -R www-data:www-data /var/www/html
+# Instalar dependencias de Composer
+RUN composer install --no-dev --optimize-autoloader
 
-# Expone el puerto
+# Exponer puerto 80
 EXPOSE 80
