@@ -3,4 +3,3 @@ vendor/
 .gitignore
 README.md
 .env
-*.md
