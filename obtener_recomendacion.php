@@ -7,8 +7,11 @@ header("Content-Type: application/json");
 require __DIR__ . '/vendor/autoload.php';
 use Dotenv\Dotenv;
 
-$dotenv = Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+// Solo cargar .env en desarrollo local
+if (file_exists(__DIR__ . '/.env')) {
+    $dotenv = Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
+}
 
 include 'conexion.php';
 
@@ -42,7 +45,7 @@ if ($esEmocion && empty($comentario)) {
 }
 
 // Si no hay en BD o hay comentario o es redacción libre, usar Groq
-$apiKey = $_ENV['GROQ_API_KEY'];
+$apiKey = getenv('GROQ_API_KEY') ?: ($_ENV['GROQ_API_KEY'] ?? '');
 
 if (empty($apiKey)) {
     echo json_encode(['error' => 'API Key de Groq no configurada']);
