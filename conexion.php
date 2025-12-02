@@ -1,9 +1,9 @@
 <?php
 header('Access-Control-Allow-Origin:*');
-$host = "localhost";
+$host = "yamabiko.proxy.rlwy.net";
 $user = "root";
-$pass = "12345";
-$db = "emotips";
+$pass = "bqEqlRXHPrqZCTxNZqppwxLjCvYqzbPM";
+$db = "railway";
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
